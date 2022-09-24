@@ -22,7 +22,6 @@ export default class Imap {
   private readonly eventEmitter: EventEmitter;
   private readonly logger: Logger;
   private readonly mailboxes: Map<string, Mailbox>;
-  private readonly loadedMails: Mail[];
 
   // @ts-ignore: Property initialized in start() method
   private client: ImapFlow;
@@ -36,7 +35,6 @@ export default class Imap {
     this.eventEmitter = new EventEmitter();
     this.logger = new Logger(config.logging);
     this.mailboxes = new Map();
-    this.loadedMails = [];
   }
 
   /**
@@ -48,7 +46,6 @@ export default class Imap {
     this.watchErrors();
     await this.loadMailboxes();
     await this.watchMailboxes();
-    setTimeout(this.emitLoadedMails.bind(this), 1000);
   }
 
   /**
@@ -170,6 +167,56 @@ export default class Imap {
     return false;
   }
 
+  /**
+   * Get a list of unseen mails from a mailbox
+   * @param {string} mailboxPath Path to mailbox (or name)
+   * @returns {Mail[]} List of mails
+   */
+  public async getUnseenMails(mailboxPath: string): Promise<Mail[]> {
+    const mails: Mail[] = [];
+    for (const msg of await this.search(mailboxPath, { seen: false })) {
+      const mail = await this.getNewMail(mailboxPath, msg);
+      mails.push(mail);
+    }
+    return mails;
+  }
+
+  /**
+   * Get a list of seen mails from a mailbox
+   * @param {string} mailboxPath Path to mailbox (or name)
+   * @returns {Mail[]} List of mails
+   */
+  public async getSeenMails(mailboxPath: string): Promise<Mail[]> {
+    const mails: Mail[] = [];
+    for (const msg of await this.search(mailboxPath, { seen: true })) {
+      const mail = await this.getNewMail(mailboxPath, msg);
+      mails.push(mail);
+    }
+    return mails;
+  }
+
+  /**
+   * Get all the mails from a mailbox
+   * @param {string} mailboxPath Path to mailbox (or name) 
+   * @returns {Mail[]} List of mails
+   */
+  public async getAllMails(mailboxPath: string): Promise<Mail[]> {
+    const mails: Mail[] = [];
+    for (const msg of await this.search(mailboxPath, '1:*')) {
+      const mail = await this.getNewMail(mailboxPath, msg);
+      mails.push(mail);
+    }
+    return mails;
+  }
+
+  /**
+   * Get list of mailboxes
+   * @returns {Map<string, Mailbox>} Map of mailboxes
+   */
+  public getMailboxes(): Map<string, Mailbox> {
+    return this.mailboxes;
+  }
+
   private async connect() {
     try {
       this.logger.log(
@@ -276,13 +323,6 @@ export default class Imap {
     return new Mail(this, mailboxPath, msg, parsedMail);
   }
 
-  private async emitLoadedMails() {
-    for (const loadedMail of this.loadedMails) {
-      this.eventEmitter.emit('loadedMail', loadedMail);
-    }
-    this.loadedMails.length = 0;
-  }
-
   private async getLastUid(
     mailboxPath: string,
     loading = false,
@@ -294,7 +334,7 @@ export default class Imap {
       }
       if (loading) {
         const mail = await this.getNewMail(mailboxPath, msg);
-        this.loadedMails.push(mail);
+        this.eventEmitter.emit('loadedMail', mail);
       }
     }
     return lastUid;
@@ -309,51 +349,6 @@ export default class Imap {
       }
     }
     return mails;
-  }
-
-  private async getLoadedMails(mailbox: Mailbox): Promise<Mail[]> {
-    const mails: Mail[] = [];
-    for (const msg of await this.search(mailbox.path, `1:*`)) {
-      if (msg.uid > mailbox.lastUid) {
-        const mail = await this.getNewMail(mailbox.path, msg);
-        mails.push(mail);
-      }
-    }
-    return mails;
-  }
-
-  // TODO
-  public async getUnseenMails(mailboxPath: string): Promise<Mail[]> {
-    const mails: Mail[] = [];
-    for (const msg of await this.search(mailboxPath, { seen: false })) {
-      const mail = await this.getNewMail(mailboxPath, msg);
-      mails.push(mail);
-    }
-    return mails;
-  }
-
-  // TODO
-  public async getSeenMails(mailboxPath: string): Promise<Mail[]> {
-    const mails: Mail[] = [];
-    for (const msg of await this.search(mailboxPath, { seen: true })) {
-      const mail = await this.getNewMail(mailboxPath, msg);
-      mails.push(mail);
-    }
-    return mails;
-  }
-
-  // TODO
-  public async getAllMails(mailboxPath: string): Promise<Mail[]> {
-    const mails: Mail[] = [];
-    for (const msg of await this.search(mailboxPath, '1:*')) {
-      const mail = await this.getNewMail(mailboxPath, msg);
-      mails.push(mail);
-    }
-    return mails;
-  }
-
-  public getMailboxes(): Map<string, Mailbox> {
-    return this.mailboxes;
   }
 
   private async search(
