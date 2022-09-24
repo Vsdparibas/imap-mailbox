@@ -1,0 +1,43 @@
+{
+  "name": "imap-mailbox",
+  "version": "1.0.0",
+  "description": "Simple library to use and watch IMAP mailboxes",
+  "keywords": [
+    "simple",
+    "library",
+    "imap",
+    "mail",
+    "mails",
+    "mailbox",
+    "inbox",
+    "watch",
+    "watcher",
+    "manager"
+  ],
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc-watch --onSuccess \"node ./lib/index.js\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "vsdparibas",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/imapflow": "^1.0.10",
+    "@types/mailparser": "^3.4.0",
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "eslint": "^8.23.1",
+    "eslint-config-standard-with-typescript": "^23.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.3.0",
+    "eslint-plugin-promise": "^6.0.1",
+    "jsdoc-to-markdown": "^7.1.1",
+    "tsc-watch": "^5.0.3",
+    "typescript": "^4.8.3"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "imapflow": "^1.0.108",
+    "mailparser": "^3.5.0"
+  }
+}
