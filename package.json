@@ -1,6 +1,6 @@
 {
   "name": "imap-mailbox",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple library to use and watch IMAP mailboxes",
   "keywords": [
     "simple",
