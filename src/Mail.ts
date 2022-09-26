@@ -2,6 +2,17 @@ import { FetchMessageObject } from 'imapflow';
 import { AddressObject, ParsedMail } from 'mailparser';
 import Imap from './Imap';
 
+/**
+ * A mail from mailbox
+ * @class
+ * @property {number} uid - Mail's unique id
+ * @property {number} seq - Mail's sequence number
+ * @property {string} subject - Mail's subject
+ * @property {AddressObject | undefined} from - Mail's from informations
+ * @property {string} content - Mail's content
+ * @property {string} mailboxPath - Mail's mailbox name
+ * @property {ParsedMail} parsedMail - mailparser parsed mail
+ */
 export default class Mail {
   private readonly imap: Imap;
   uid: number;
@@ -28,14 +39,25 @@ export default class Mail {
     this.parsedMail = parsedMail;
   }
 
+  /**
+   * Delete this mail
+   */
   public async delete() {
     this.imap.deleteMails(this.mailboxPath, { uids: [this.uid] });
   }
 
+
+  /**
+   * Mark see this mail
+   */
   public async see() {
     this.imap.seeMails(this.mailboxPath, { uids: [this.uid] });
   }
 
+
+  /**
+   * Mark unsee this mail
+   */
   public async unsee() {
     this.imap.unseeMails(this.mailboxPath, { uids: [this.uid] });
   }
